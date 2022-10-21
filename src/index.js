@@ -144,14 +144,5 @@ window.scrollBy({
 });
 }
 
-// const { height: cardHeight } = galleryEl
-//   .firstElementChild.getBoundingClientRect();
-
-// window.scrollBy({
-//   top: cardHeight * 2,
-//   behavior: "smooth",
-// });
-
-
 console.log("hi end");
 
