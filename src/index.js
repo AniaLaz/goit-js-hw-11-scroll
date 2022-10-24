@@ -5,15 +5,25 @@ import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import SimpleLightbox from "simplelightbox";
 import "simplelightbox/dist/simple-lightbox.min.css";
 
-
 const lightbox = new SimpleLightbox('.gallery a'); 
+
+
 
 const formEl = document.querySelector(".search-form");
 const buttonEl = document.querySelector("button");
 const inputEl = document.querySelector("input");
 const galleryEl = document.querySelector(".gallery")
-const btnLoadMoreEl = document.querySelector(".load-more")
+const guardEl=document.querySelector(".guard")
+// const btnLoadMoreEl = document.querySelector(".load-more")
 const bodyEl=document.querySelector("body")
+const options ={
+  root: null,
+  rootMargin: '50px',
+  threshold:1,
+}
+
+
+const observer =  new IntersectionObserver(onLoad, options);
 
 let totalHits = "";
 let pageNow = "";
@@ -22,23 +32,27 @@ buttonEl.disabled = true;
 console.log("SimpleLightbox");
 
 buttonEl.addEventListener("click", onPicture)
-btnLoadMoreEl.addEventListener("click", onLoadMore)
+// btnLoadMoreEl.addEventListener("click", onLoadMore)
 inputEl.addEventListener("input", onDisabledButton)
-bodyEl.addEventListener("scroll", onScroll)
+
 
 let name ="";
-let page = 1;
+let page = 0;
 
-btnLoadMoreEl.classList.add("is-hidden")
+
+// btnLoadMoreEl.classList.add("is-hidden")
 
 function onDisabledButton(e) {
+  page = 1;
   buttonEl.disabled = false;
 }
 
 async function onPicture(e) {
   buttonEl.disabled = true;
+  console.log('page', page);
 
     e.preventDefault();
+    window.scrollTo(top);
     name = inputEl.value.trim()
     
 
@@ -48,7 +62,7 @@ async function onPicture(e) {
         pageNow = totalHits/40;
         console.log("pageNow",pageNow);
         page = 1;
-        
+        observer.observe(guardEl)
       
     if (data.hits.length === 0){
       galleryEl.innerHTML = "";
@@ -80,31 +94,75 @@ async function onPicture(e) {
     .catch(err => console.log(err))
 }
 
-function onLoadMore(el) {
-  btnLoadMoreEl.disabled = true;
+// function onLoadMore(el) {
+//   btnLoadMoreEl.disabled = true;
+//     fetchPicture(name,page)
+//     .then(data => {
+//         const marcup = createMarkup(data)
+//         galleryEl.insertAdjacentHTML("beforeend", marcup);
+//         page +=1;
+//         lightbox.refresh()
+
+//         //--------------
+//         const { height: cardHeight } =
+//         galleryEl.firstElementChild.getBoundingClientRect();
+
+//       window.scrollBy({
+//         top: cardHeight * 2,
+//         behavior: 'smooth',
+//       });
+//       //-------------
+//      return})
+//     .catch(err => console.log(err))
+    
+//     console.log("page", page);
+//     console.log("pageNow", pageNow);
+//     btnLoadMoreEl.disabled = false;
+//     if (page > pageNow){
+//         Notify.failure("We're sorry, but you've reached the end of search results.");
+//         btnLoadMoreEl.classList.add("is-hidden")
+//     }
+// }
+
+
+function onLoad(endries) {
+console.log("Hello scrol", endries);
+endries.forEach(entry => {
+  if (entry.isIntersecting){
     fetchPicture(name,page)
     .then(data => {
         const marcup = createMarkup(data)
         galleryEl.insertAdjacentHTML("beforeend", marcup);
         page +=1;
         lightbox.refresh()
-        return})
-    .catch(err => console.log(err))
-    // refresh()
+
+        //--------------
+        const { height: cardHeight } =
+        galleryEl.firstElementChild.getBoundingClientRect();
+
+      window.scrollBy({
+        top: cardHeight * 2,
+        behavior: 'smooth',
+      });
+      //-------------
+     return})
+         .catch(err => console.log(err))
+    
     console.log("page", page);
     console.log("pageNow", pageNow);
     btnLoadMoreEl.disabled = false;
     if (page > pageNow){
         Notify.failure("We're sorry, but you've reached the end of search results.");
-        btnLoadMoreEl.classList.add("is-hidden")
-    }
+        btnLoadMoreEl.classList.add("is-hidden")}
+  }
+}
+  )
 }
 
 
 function  createMarkup(arr) {
 
     console.log("arr", arr.hits);
-    //   console.log("arr.length", arr.hits.length);
     return arr.hits.map(el => `
     <div class="photo-card">
     <a class="gallery__item" href="${el.largeImageURL}">
@@ -130,19 +188,3 @@ function  createMarkup(arr) {
   </div>`
 ).join('')
 }
-
-console.log("hello");
-
-
-function onScroll(e) {
-  const { height: cardHeight } = galleryEl
-  .firstElementChild.getBoundingClientRect();
-
-window.scrollBy({
-  top: cardHeight * 2,
-  behavior: "smooth",
-});
-}
-
-console.log("hi end");
-
